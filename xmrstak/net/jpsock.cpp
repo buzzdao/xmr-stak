@@ -401,6 +401,7 @@ bool jpsock::process_pool_job(const opq_json_val* params)
 			return set_socket_error("PARSE error: Invalid target");
 
 		
+
 		oPoolJob.iTarget = t32_to_t64(iTempInt);
 	}
 	else if(target_slen <= 16)
@@ -509,8 +510,19 @@ bool jpsock::cmd_ret_wait(const char* sPacket, opq_json_val& poResult)
 	if(!bResult)
 	{
 		set_socket_error("CALL error: Timeout while waiting for a reply");
-		disconnect();
 		return false;
+//		set_socket_error("CALL error: Timeout while waiting for a reply");
+//		disconnect();
+//		return false;
+		if (attempt > 1)
+			{
+					  	set_socket_error("CALL error: Timeout while waiting for a reply");
+							disconnect();
+							return false;
+						} else {
+									//TODO log a warning
+									return cmd_ret_wait(sPacket, poResult, attempt++);
+			}
 	}
 
 	if(bSuccess)
@@ -565,7 +577,6 @@ bool jpsock::cmd_login()
 		for(size_t i=0; i < ext->Size(); i++)
 		{
 			const Value& jextname = ext->GetArray()[i];
-			
 			if(!jextname.IsString())
 				continue;
 
